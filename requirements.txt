@@ -1,0 +1,9 @@
+tensorflow
+pandas
+matplotlib
+holidays
+scikit-learn
+jupyter
+pyarrow
+gdown
+keras
