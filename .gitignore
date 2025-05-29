@@ -4,6 +4,8 @@ mfdp_data
 dataset.csv
 dataset_mini.csv
 result_lstm_test.csv
-result_lstm.csv
-y_l.npy
-y_test.npy
+notebooks/result_lstm.csv
+notebooks/y_l.npy
+notebooks/y_test.npy
+.env
+/data/postgres
