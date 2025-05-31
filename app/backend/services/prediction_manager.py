@@ -14,21 +14,32 @@ class PredictionManager:
         self.session = session
         self.ctx = context
 
+    def check_status(self):
+        user = self.ctx.user
+        if user.status == 'bronze':
+            self.__check_limit(10000)
+        elif user.status == 'silver':
+            self.__check_limit(100)
+        elif user.status == 'gold':
+            self.__check_limit(1000)
+
+    def __check_limit(self, num: int = 10):
+        today = datetime.now(UTC).date()
+        stmt = select(Prediction).where(
+            Prediction.user_id == self.ctx.user.id,
+            Prediction.timestamp >= datetime.combine(today, datetime.min.time())
+        )
+        count = self.session.exec(stmt).all()
+        if len(count) >= num:
+            raise PermissionError(f'Лимит {self.ctx.user.status} плана — {num} задач в день')
+
     def create_prediction(
             self, model: str, city: str,
             cost: float, district: int, hour: int) -> Prediction:
         user = self.ctx.user
         bal = self.ctx.balance
 
-        if user.status == 'bronze':
-            today = datetime.now(UTC).date()
-            stmt = select(Prediction).where(
-                Prediction.user_id == user.id,
-                Prediction.timestamp >= datetime.combine(today, datetime.min.time())
-            )
-            count = self.session.exec(stmt).all()
-            if len(count) >= 100000:
-                raise PermissionError('Лимит бронзового плана — 10 задач в день')
+        self.check_status()
 
         initial_pred = Prediction(
             user_id=user.id,

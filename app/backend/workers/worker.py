@@ -6,9 +6,11 @@ import os
 from datetime import datetime, UTC
 
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 from workers.connection import get_rabbitmq_connection
 from db.db import get_session
 from services.user_manager import UserManager
+from services.data_manager import DataManager
 from services.core.enums import TaskStatus
 from services.core.ml_model import ModelRegistry
 
@@ -20,6 +22,16 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s'
 )
 
+data = DataManager('data/lstm_data.csv')
+
+def post_process(
+    y_pred_s: np.ndarray,
+    scaler_y: StandardScaler,
+):
+    y = y_pred_s.copy()
+    y = scaler_y.inverse_transform(y.reshape(-1, 1)).reshape(y.shape)
+    y = np.clip(y, 0, None)
+    return [math.ceil(el) for el in y]
 
 def process_prediction(task_data):
     with next(get_session()) as session:
@@ -30,11 +42,13 @@ def process_prediction(task_data):
             pred.timestamp = datetime.now(UTC)
             session.commit()
 
-            sequence = np.load('data/test.npy')
             model = ModelRegistry.get('lstm')
+            target_datetime = datetime(2024, 5, 30, task_data['hour'])
+            sequence = data.create_single_sequence(target_datetime, task_data['district'], model.scaler_X)
+
             result = model.predict(sequence)
 
-            pred.result = str([0 if num < 0 else math.ceil(num) for num in result])
+            pred.result = str(post_process(result, model.scaler_y))
             pred.timestamp = datetime.now(UTC)
             pred.status = TaskStatus.COMPLETED
             session.commit()

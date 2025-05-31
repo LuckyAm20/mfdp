@@ -6,4 +6,4 @@ scikit-learn
 jupyter
 pyarrow
 gdown
-keras
+dvc[s3]

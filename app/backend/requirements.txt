@@ -12,3 +12,5 @@ asyncio
 fastapi
 uvicorn
 pika
+scikit-learn
+joblib
