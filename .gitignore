@@ -11,4 +11,3 @@ notebooks/y_test.npy
 /data/postgres
 /data/rabbitmq
 logs
-data
