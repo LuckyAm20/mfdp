@@ -6,10 +6,19 @@ from services.prediction_manager import PredictionManager
 
 
 class UserManager:
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, user_id: Optional[int] = None):
         self.session = session
-        self.balance = BalanceManager(session)
-        self.prediction = PredictionManager(session, self.balance)
+        self.__user = self.__get_by_id(user_id) if user_id else None
+        self.balance = BalanceManager(session, self)
+        self.prediction = PredictionManager(session, self)
+
+    @property
+    def user(self):
+        return self.__user
+
+    @user.setter
+    def user(self, value: User):
+        self.__user = value
 
     def register(self, username: str, raw_password: str) -> User:
         existing = self.get_by_username(username)
@@ -42,3 +51,6 @@ class UserManager:
 
     def get_by_username(self, username: str,) -> Optional[User]:
         return self.session.exec(select(User).where(User.username == username)).first()
+
+    def __get_by_id(self, user_id: int) -> Optional[User]:
+        return self.session.exec(select(User).where(User.id == user_id)).first()

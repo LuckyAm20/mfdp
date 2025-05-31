@@ -9,3 +9,5 @@ notebooks/y_l.npy
 notebooks/y_test.npy
 .env
 /data/postgres
+/data/rabbitmq
+logs

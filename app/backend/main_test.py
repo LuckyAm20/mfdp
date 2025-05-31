@@ -1,48 +1,37 @@
-from sqlmodel import SQLModel
+import time
+
+from workers.publisher import publish_prediction_task
 from db.db import init_db, get_session
-import numpy as np
 
 from services.user_manager import UserManager
-from services.data_manager import DataManager
 
 def main():
     init_db()
-
+    time.sleep(60)
     with next(get_session()) as session:
         user_mgr = UserManager(session)
 
-        try:
-            df = np.load('data/test.npy')
-            print('DataManager: loaded rows =', len(df))
-        except FileNotFoundError:
-            print('DataManager: sample.csv not found, пропускаем')
-
         user = user_mgr.register('alice', 'password123')
         print('Registered:', user.username, 'status=', user.status)
+        user_mgr.user = user
 
         auth = user_mgr.authenticate('alice', 'password123')
         print('Authenticated OK:', bool(auth))
 
-        print('Balance before:', user.balance)
-        user_mgr.balance.deposit(user, 150.0)
-        print('After deposit:', user.balance)
+        print('Balance before:', user_mgr.user.balance)
+        user_mgr.balance.deposit(150.0)
+        print('After deposit:', user_mgr.user.balance)
         try:
-            user_mgr.balance.withdraw(user, 50.0)
+            user_mgr.balance.withdraw(50.0)
         except Exception as e:
             print('Withdraw error:', e)
-        print('After withdraw:', user.balance)
+        print('After withdraw:', user_mgr.user.balance)
 
-        pred = user_mgr.prediction.run_prediction(
-            user,
-            selected_model='lstm',
-            selected_city='NewYork',
-            cost=20.0,
-            sequence=df,
-        )
+        pred = publish_prediction_task(user_mgr.user.id, 'lstm', 'NYC', 10, 1, 1)
         print('Prediction created id=', pred.id, 'status=', pred.status)
 
-        print('Final balance:', user.balance)
-        print('All predictions:', [p.id for p in user_mgr.prediction.list_by_user(user)])
+        print('Final balance:', user_mgr.user.balance)
+        print('All predictions:', [p for p in user_mgr.prediction.list_by_user()])
 
 
 if __name__ == '__main__':
