@@ -7,3 +7,4 @@ jupyter
 pyarrow
 gdown
 dvc[s3]
+ruff

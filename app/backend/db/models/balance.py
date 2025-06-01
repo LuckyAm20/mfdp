@@ -9,3 +9,4 @@ class Balance(SQLModel, table=True):
     user_id: int = Field(foreign_key='user.id')
     amount: float
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    description: str = Field(default='')
