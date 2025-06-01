@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 
 from api.v1.schemas.balance import (
     BalanceInfoResponse,
@@ -9,6 +9,7 @@ from api.v1.schemas.balance import (
     PurchaseStatusRequest,
     PurchaseStatusResponse,
     BalanceHistoryResponse,
+    HistoryRequest
 )
 from services.user_manager import UserManager
 from services.core.security import get_current_user
@@ -87,11 +88,12 @@ def purchase_status(
     summary='Получить историю операций с балансом',
 )
 def get_balance_history(
-    amount: Optional[int] = Query(5, ge=1),
+    req: HistoryRequest = Body(HistoryRequest()),
     user_manager: UserManager = Depends(get_current_user),
 ):
     try:
-        history_records = user_manager.balance.get_history(limit=amount)
+        limit = req.amount or 5
+        history_records = user_manager.balance.get_history(limit=limit)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

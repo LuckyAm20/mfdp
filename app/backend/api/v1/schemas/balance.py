@@ -36,6 +36,9 @@ class BalanceHistoryItem(BaseModel):
         }
     )
 
+class HistoryRequest(BaseModel):
+    amount: Optional[int] = 5
+
 class BalanceHistoryResponse(BaseModel):
     history: list[BalanceHistoryItem]
 
