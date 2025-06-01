@@ -3,9 +3,9 @@ FROM python:3.11-slim
 WORKDIR /app/backend
 ENV PYTHONPATH=/app/backend
 
-COPY requirements.txt .
+COPY requirements-worker.txt .
 RUN pip install --upgrade pip \
- && pip install --no-cache-dir -r requirements.txt
+ && pip install --no-cache-dir -r requirements-worker.txt
 
 COPY . .
 

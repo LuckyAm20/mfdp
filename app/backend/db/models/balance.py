@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from typing import Optional
 
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, SQLModel
 
 
 class Balance(SQLModel, table=True):

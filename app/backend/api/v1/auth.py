@@ -1,28 +1,96 @@
+from datetime import timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from sqlmodel import Session
 
-from db.db import get_session
+from api.v1.schemas.auth import (
+    RegisterRequest,
+    LoginRequest,
+    TokenResponse,
+    UserStatusResponse,
+)
 from services.user_manager import UserManager
-from core.security import create_access_token, verify_password
-from core.security import oauth2_scheme
-from schemas.token import Token, TokenData
+from services.core.security import (
+    create_access_token,
+    create_bot_token,
+    get_current_user,
+)
+from db.db import get_session
 
-router = APIRouter(prefix='/api/v1/auth', tags=['auth'])
+router = APIRouter(
+    prefix='/api/v1/auth',
+    tags=['auth'],
+)
 
-@router.post('/register', status_code=status.HTTP_201_CREATED)
-def register(username: str, password: str, session = Depends(get_session)):
-    um = UserManager(session)
-    try:
-        user = um.register(username, password)
-    except ValueError as err:
-        raise HTTPException(status_code=400, detail=str(err))
-    return {'username': user.username, 'role': user.role, 'status': user.status}
 
-@router.post('/token', response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), session = Depends(get_session)):
-    um = UserManager(session)
-    user = um.get_by_username(form_data.username)
-    if not user or not verify_password(form_data.password, user.password_hash):
-        raise HTTPException(status_code=401, detail='Invalid credentials')
-    access_token = create_access_token({'sub': user.username})
-    return {'access_token': access_token, 'token_type': 'bearer'}
+@router.post(
+    '/register',
+    response_model=TokenResponse,
+    summary='Зарегистрировать нового пользователя и выдать токены',
+)
+def register(
+    req: RegisterRequest,
+    session: Session = Depends(get_session),
+):
+    user_manager = UserManager(session)
+    user = user_manager.register(req.username, req.password)
+
+    data = {'sub': user.username}
+
+    access_token = create_access_token(
+        data,
+        expires_delta=timedelta(minutes=15),
+    )
+    bot_token = create_bot_token(data)
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type='bearer',
+        bot_token=bot_token,
+    )
+
+
+@router.post(
+    '/login',
+    response_model=TokenResponse,
+    summary='Аутентификация: проверить логин/пароль, выдать токены',
+)
+def login(
+    req: LoginRequest,
+    session: Session = Depends(get_session),
+):
+
+    user_manager = UserManager(session)
+    user = user_manager.authenticate(req.username, req.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Неверное имя пользователя или пароль',
+            headers={'WWW-Authenticate': 'Bearer'},
+        )
+
+    data = {'sub': user.username}
+    access_token = create_access_token(
+        data,
+        expires_delta=timedelta(minutes=15),
+    )
+    bot_token = create_bot_token(data)
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type='bearer',
+        bot_token=bot_token,
+    )
+
+
+@router.get(
+    '/me',
+    response_model=UserStatusResponse,
+    summary='Информация о текущем пользователе (username + status)',
+)
+def read_current_user(
+    user_manager: UserManager = Depends(get_current_user),
+):
+    user = user_manager.user
+    return UserStatusResponse(username=user.username, status=user.status)
+

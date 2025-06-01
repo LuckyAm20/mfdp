@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Optional
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -40,7 +40,7 @@ class DataManager:
             past_steps: int = 72,
             date_col: str = 'date',
             hour_col: str = 'hour'
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         features_cols = [
             'trips_count', 'hour_sin', 'hour_cos', 'dow_sin', 'dow_cos',
             'is_holiday', 'month', 'is_weekend', 'is_month_start', 'is_month_end',

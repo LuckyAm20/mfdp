@@ -1,0 +1,12 @@
+scikit-learn
+joblib
+pandas
+asyncpg==0.28.0
+psycopg2-binary
+psycopg-binary==3.1.10
+sqlmodel
+tensorflow-cpu
+pika
+numpy
+pydantic-settings==2.0.3
+pydantic==2.3.0
