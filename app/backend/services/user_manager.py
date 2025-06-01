@@ -3,6 +3,16 @@ from sqlmodel import Session, select
 from db.models.user import User
 from services.balance_manager import BalanceManager
 from services.prediction_manager import PredictionManager
+from datetime import date, timedelta
+
+
+STATUS_PRICES = {
+    'bronze': 0.0,
+    'silver': 100.0,
+    'gold': 200.0,
+    'diamond': 500.0,
+}
+STATUS_DURATION_DAYS = 30
 
 
 class UserManager:
@@ -48,6 +58,49 @@ class UserManager:
             'balance':  user.balance,
             'last_predictions': history[-5:],
         }
+
+    def purchase_status(self, level: str) -> User:
+        user = self.user
+        lvl = level.lower()
+
+        if STATUS_PRICES[self.user.status] > STATUS_PRICES[lvl]:
+            raise ValueError('Невозможно понизить статус')
+
+        price = STATUS_PRICES[lvl]
+        if user.balance < price:
+            raise ValueError('Недостаточно средств')
+
+        self.balance.withdraw(price, description=f'Покупка статуса {lvl}')
+
+        today = date.today()
+        if user.status == lvl and user.status_date_end and user.status_date_end >= today:
+            new_end = user.status_date_end + timedelta(days=STATUS_DURATION_DAYS)
+        else:
+            new_end = today + timedelta(days=STATUS_DURATION_DAYS)
+
+        user.status = lvl
+        user.status_date_end = new_end
+
+        self.session.add(user)
+        self.session.commit()
+        self.session.refresh(user)
+        return user
+
+    @classmethod
+    def reset_expired_statuses(cls, session: Session):
+
+        today = date.today()
+        stmt = select(User).where(
+            User.status_date_end != None,  # noqa: E711
+            User.status_date_end < today,
+            User.status != 'bronze'
+        )
+        expired_users = session.exec(stmt).all()
+        for user in expired_users:
+            user.status = 'bronze'
+            user.status_date_end = None
+            session.add(user)
+        session.commit()
 
     def get_by_username(self, username: str,) -> Optional[User]:
         return self.session.exec(select(User).where(User.username == username)).first()

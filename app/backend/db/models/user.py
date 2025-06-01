@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlmodel import Field, SQLModel
+from datetime import date
 
 
 class User(SQLModel, table=True):
@@ -11,3 +12,4 @@ class User(SQLModel, table=True):
     balance: float = Field(default=0.0)
     tg_id: Optional[str] = Field(default=None, unique=True)
     selected_model: Optional[str] = Field(default=None)
+    status_date_end: Optional[date] = Field(default=None)

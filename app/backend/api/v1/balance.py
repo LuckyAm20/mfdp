@@ -1,25 +1,79 @@
-# from fastapi import APIRouter, Depends, HTTPException, status
-#
-# from db.db import get_session
-# from core.security import get_current_user
-# from services.balance_manager import BalanceManager
-# from schemas.balance import BalanceOut, DepositIn
-#
-# router = APIRouter(prefix='/api/v1/balance', tags=['balance'])
-#
-# @router.get('/', response_model=float)
-# def get_balance(current_user = Depends(get_current_user)):
-#     return current_user.balance
-#
-# @router.post('/deposit', response_model=BalanceOut)
-# def deposit(body: DepositIn, current_user = Depends(get_current_user), session=Depends(get_session)):
-#     bm = BalanceManager(session)
-#     try:
-#         entry = bm.deposit(current_user, body.amount)
-#     except ValueError as err:
-#         raise HTTPException(status_code=400, detail=str(err))
-#     return entry
-#
-# @router.get('/history', response_model=list[BalanceOut])
-# def history(current_user = Depends(get_current_user)):
-#     return current_user.balance_history
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from api.v1.schemas.balance import (
+    BalanceInfoResponse,
+    TopUpRequest,
+    TopUpResponse,
+    PurchaseStatusRequest,
+    PurchaseStatusResponse,
+)
+from services.user_manager import UserManager
+from services.core.security import get_current_user
+
+router = APIRouter(
+    prefix='/api/v1/balance',
+    tags=['balance'],
+)
+
+
+@router.get(
+    '/me',
+    response_model=BalanceInfoResponse,
+    summary='Получить информацию о балансе и статусе пользователя',
+)
+def get_balance_info(
+    user_manager: UserManager = Depends(get_current_user),
+):
+    user = user_manager.user
+    return BalanceInfoResponse(
+        balance=user.balance,
+        status=user.status,
+        status_date_end=user.status_date_end,
+    )
+
+
+@router.post(
+    '/top_up',
+    response_model=TopUpResponse,
+    summary='Пополнить баланс пользователя',
+)
+def top_up_balance(
+    req: TopUpRequest,
+    user_manager: UserManager = Depends(get_current_user),
+):
+    try:
+        record = user_manager.balance.deposit(req.amount, description='Пополнение счёта')
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    return TopUpResponse(
+        new_balance=user_manager.user.balance,
+        amount=record.amount,
+    )
+
+
+@router.post(
+    '/purchase',
+    response_model=PurchaseStatusResponse,
+    summary='Купить или продлить платный статус (silver, gold, diamond)',
+)
+def purchase_status(
+    req: PurchaseStatusRequest,
+    user_manager: UserManager = Depends(get_current_user),
+):
+    try:
+        user = user_manager.purchase_status(req.status)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    return PurchaseStatusResponse(
+        status=user.status,
+        status_date_end=user.status_date_end,
+        remaining_balance=user.balance,
+    )
