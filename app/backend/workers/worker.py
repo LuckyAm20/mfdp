@@ -2,8 +2,10 @@ import json
 import logging
 import math
 import os
+import threading
+import time
 
-from datetime import datetime, UTC
+from datetime import datetime, timedelta, UTC
 
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -84,5 +86,27 @@ def start_worker():
         logging.exception(f'Worker завершился с ошибкой: {e}')
 
 
+def daily_reload():
+    while True:
+        now = datetime.now(UTC)
+        tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        delay = (tomorrow - now).total_seconds()
+        time.sleep(delay)
+        try:
+            ModelRegistry.reload_all()
+            logging.info('🔄 Модели перезагружены в воркере')
+        except Exception as e:
+            logging.exception(f'Ошибка при перезагрузке моделей: {e}')
+
+
 if __name__ == '__main__':
+    try:
+        ModelRegistry.reload_all()
+        logging.info('✅ Модели загружены при старте воркера')
+    except Exception as e:
+        logging.exception(f'Ошибка при начальной загрузке моделей: {e}')
+
+    thread = threading.Thread(target=daily_reload, daemon=True)
+    thread.start()
+
     start_worker()

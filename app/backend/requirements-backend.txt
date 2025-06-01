@@ -1,6 +1,4 @@
-tensorflow-cpu
 passlib
-
 python-jose
 sqlmodel
 pydantic==2.3.0
@@ -8,10 +6,7 @@ pydantic-settings==2.0.3
 asyncpg==0.28.0
 psycopg2-binary
 psycopg-binary==3.1.10
-pandas
-asyncio
+numpy
 fastapi
 uvicorn
 pika
-scikit-learn
-joblib
