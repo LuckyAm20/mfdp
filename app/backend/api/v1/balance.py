@@ -63,7 +63,7 @@ def purchase_status(
         remaining_balance=user.balance,
     )
 
-@router.get(
+@router.post(
     '/history',
     response_model=BalanceHistoryResponse,
     summary='Получить историю операций с балансом',

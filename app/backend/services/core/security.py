@@ -5,7 +5,7 @@ from typing import Optional, Any
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session
 
@@ -19,7 +19,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 15))
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/v1/auth/login')
-
+BOT_SECRET = os.environ.get('BOT_SECRET', '')
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
@@ -68,6 +68,7 @@ def get_username_from_token(token: str, verify_exp: bool = True) -> Optional[str
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     session: Session = Depends(get_session),
+    x_bot_secret: Optional[str] = Header(None)
 ) -> UserManager:
     try:
         payload = decode_token(token, verify_exp=True)
@@ -88,7 +89,13 @@ def get_current_user(
             headers={'WWW-Authenticate': 'Bearer'},
         )
 
-    if token_scope != 'frontend':
+    if token_scope == 'bot':
+        if x_bot_secret is None or x_bot_secret != BOT_SECRET:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='Бот-токен принят, но X-Bot-Secret не передан или неверен',
+            )
+    elif token_scope != 'frontend':
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='У вас нет прав на этот ресурс',

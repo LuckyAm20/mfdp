@@ -36,7 +36,6 @@ class PredictionManager:
             self, model: str, city: str,
             cost: float, district: int, hour: int) -> Prediction:
         user = self.ctx.user
-        bal = self.ctx.balance
 
         initial_pred = Prediction(
             user_id=user.id,
@@ -51,8 +50,6 @@ class PredictionManager:
         self.session.add(initial_pred)
         self.session.commit()
         self.session.refresh(initial_pred)
-
-        bal.withdraw(initial_pred.cost, description='Оплата ML-задачи')
 
         return initial_pred
 

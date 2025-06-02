@@ -55,8 +55,8 @@ def process_prediction(task_data):
             pred.timestamp = datetime.now(UTC)
             pred.status = TaskStatus.COMPLETED
             session.commit()
-
-            um.balance.withdraw(task_data['cost'], description='worker charge')
+            if task_data['cost'] != 0:
+                um.balance.withdraw(task_data['cost'], description='Оплата предсказания')
 
             logging.info(f'✅ Предсказание выполнено: ID {task_data["prediction_id"]}, результат: {pred.result}')
 

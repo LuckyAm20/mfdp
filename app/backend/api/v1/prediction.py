@@ -90,7 +90,7 @@ def create_nyc_prediction_cost(
         )
     return create_nyc_prediction(cost, req.district, user_manager)
 
-@router.get(
+@router.post(
     '/history',
     response_model=PredictionHistoryResponse,
     summary='История предсказаний текущего пользователя',

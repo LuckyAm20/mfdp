@@ -91,12 +91,15 @@ services:
 #    depends_on:
 #      - app
 #    restart: always
-#  telegram_bot:
-#    build:
-#      context: .
-#      dockerfile: app/tg_bot/Dockerfile
-#    container_name: telegram_bot
-#    env_file:
-#      - .env
-#    depends_on:
-#      - backend
+  telegram_bot:
+    build:
+      context: ./app/tg_bot/
+      dockerfile: Dockerfile
+    container_name: telegram_bot
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/logs
+    restart: on-failure
+    depends_on:
+      - backend
