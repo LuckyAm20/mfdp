@@ -1,4 +1,3 @@
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 
@@ -94,7 +93,7 @@ def get_balance_history(
     try:
         limit = req.amount or 5
         history_records = user_manager.balance.get_history(limit=limit)
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail='Ошибка при получении истории'

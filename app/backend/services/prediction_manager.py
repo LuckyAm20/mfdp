@@ -16,7 +16,7 @@ class PredictionManager:
     def check_status(self):
         user = self.ctx.user
         if user.status == 'bronze':
-            self.__check_limit(10000)
+            self.__check_limit(10)
         elif user.status == 'silver':
             self.__check_limit(100)
         elif user.status == 'gold':
@@ -38,8 +38,6 @@ class PredictionManager:
         user = self.ctx.user
         bal = self.ctx.balance
 
-        self.check_status()
-
         initial_pred = Prediction(
             user_id=user.id,
             model=model,
@@ -58,10 +56,25 @@ class PredictionManager:
 
         return initial_pred
 
+    def get_cost(self) -> float:
+        user = self.ctx.user
+        if user.status == 'bronze':
+            return 20
+        elif user.status == 'silver':
+            return 15
+        elif user.status == 'gold':
+            return 10
+        return 5
+
+    def check_balance(self, price: float) -> None:
+        user = self.ctx.user
+        if user.balance < price:
+            raise ValueError('Недостаточно средств')
+
     def list_by_user(self) -> list[Prediction]:
         stmt = select(Prediction).where(Prediction.user_id == self.ctx.user.id)
         return self.session.exec(stmt).all()
 
     def get_by_id(self, pred_id) -> list[Prediction]:
-        stmt = select(Prediction).where(Prediction.user_id == self.ctx.user.id and Prediction.id == pred_id)
+        stmt = select(Prediction).where((Prediction.user_id == self.ctx.user.id) & (Prediction.id == pred_id))
         return self.session.exec(stmt).first()

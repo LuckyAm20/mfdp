@@ -50,15 +50,6 @@ class UserManager:
             return user
         return None
 
-    def get_profile(self, user: User) -> dict:
-        history = self.prediction.list_by_user(user)
-        return {
-            'username': user.username,
-            'status':   user.status,
-            'balance':  user.balance,
-            'last_predictions': history[-5:],
-        }
-
     def purchase_status(self, level: str) -> User:
         user = self.user
         lvl = level.lower()

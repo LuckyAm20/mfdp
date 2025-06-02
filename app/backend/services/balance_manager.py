@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 
 from sqlmodel import Session, select
 from db.models.balance import Balance
-from db.models.user import User
 from datetime import datetime, UTC
 if TYPE_CHECKING:
     from services.user_manager import UserManager

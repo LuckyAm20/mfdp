@@ -4,6 +4,7 @@ import json
 from workers.connection import get_rabbitmq_connection, QUEUE_NAME
 from db.db import get_session
 from services.user_manager import UserManager
+from datetime import timedelta
 
 
 def publish_prediction_task(user_id: int, model: str, city: str, cost: float, district: int, hour: int):
@@ -17,6 +18,8 @@ def publish_prediction_task(user_id: int, model: str, city: str, cost: float, di
             hour=hour,
         )
 
+        timestamp = pred.timestamp + timedelta(hours=1)
+
         payload = {
             'prediction_id': pred.id,
             'user_id': user_id,
@@ -25,6 +28,9 @@ def publish_prediction_task(user_id: int, model: str, city: str, cost: float, di
             'hour': hour,
             'city': city,
             'cost': cost,
+            'year': timestamp.year,
+            'month': timestamp.month,
+            'day': timestamp.day
         }
 
     conn, chan, name = get_rabbitmq_connection()

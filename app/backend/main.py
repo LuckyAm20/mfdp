@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from db.db import init_db, get_session
 from api.v1.auth import router as auth_router
 from api.v1.balance import router as balance_router
+from api.v1.prediction import router as prediction_router
 from services.user_manager import UserManager
 from datetime import timezone, datetime, timedelta
 import time
@@ -33,4 +34,4 @@ def daily_status_reset():
 
 app.include_router(auth_router)
 app.include_router(balance_router)
-# app.include_router(predictions.router)
+app.include_router(prediction_router)

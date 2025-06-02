@@ -44,8 +44,9 @@ def process_prediction(task_data):
             pred.timestamp = datetime.now(UTC)
             session.commit()
 
-            model = ModelRegistry.get('lstm')
-            target_datetime = datetime(2024, 5, 30, task_data['hour'])
+            model = ModelRegistry.get(task_data['model'])
+            # добавить task_data['year'], task_data['month'], task_data['day'], task_data['hour']
+            target_datetime = datetime(2024, 5, 30, 1)
             sequence = data.create_single_sequence(target_datetime, task_data['district'], model.scaler_X)
 
             result = model.predict(sequence)
