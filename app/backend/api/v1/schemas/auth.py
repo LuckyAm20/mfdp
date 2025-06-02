@@ -1,3 +1,6 @@
+from datetime import date
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -19,4 +22,6 @@ class TokenResponse(BaseModel):
 
 class UserStatusResponse(BaseModel):
     username: str
+    balance: float
     status: str
+    status_date_end: Optional[date]

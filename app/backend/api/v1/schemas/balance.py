@@ -2,10 +2,6 @@ from datetime import datetime, date
 from pydantic import BaseModel, ConfigDict
 from typing import Literal, Optional
 
-class BalanceInfoResponse(BaseModel):
-    balance: float
-    status: str
-    status_date_end: Optional[date]
 
 class TopUpRequest(BaseModel):
     amount: float

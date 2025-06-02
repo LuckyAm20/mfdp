@@ -1,8 +1,6 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 
 from api.v1.schemas.balance import (
-    BalanceInfoResponse,
     TopUpRequest,
     TopUpResponse,
     PurchaseStatusRequest,
@@ -17,22 +15,6 @@ router = APIRouter(
     prefix='/api/v1/balance',
     tags=['balance'],
 )
-
-
-@router.get(
-    '/me',
-    response_model=BalanceInfoResponse,
-    summary='Получить информацию о балансе и статусе пользователя',
-)
-def get_balance_info(
-    user_manager: UserManager = Depends(get_current_user),
-):
-    user = user_manager.user
-    return BalanceInfoResponse(
-        balance=user.balance,
-        status=user.status,
-        status_date_end=user.status_date_end,
-    )
 
 
 @router.post(

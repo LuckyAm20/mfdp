@@ -86,11 +86,14 @@ def login(
 @router.get(
     '/me',
     response_model=UserStatusResponse,
-    summary='Информация о текущем пользователе (username + status)',
+    summary='Информация о текущем пользователе',
 )
 def read_current_user(
     user_manager: UserManager = Depends(get_current_user),
 ):
     user = user_manager.user
-    return UserStatusResponse(username=user.username, status=user.status)
+    return UserStatusResponse(
+        username=user.username, status=user.status,
+        balance=user.balance, status_date_end=user.status_date_end
+    )
 

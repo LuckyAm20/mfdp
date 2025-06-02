@@ -1,4 +1,11 @@
-FROM ubuntu:latest
-LABEL authors="Misha"
+FROM python:3.11-slim
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /app/tg_bot
+
+COPY ./app/tg_bot/requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["python", "-u", "bot.py"]
