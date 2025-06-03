@@ -1,10 +1,10 @@
+from datetime import date, timedelta
 from typing import Optional
-from sqlmodel import Session, select
+
 from db.models.user import User
 from services.balance_manager import BalanceManager
 from services.prediction_manager import PredictionManager
-from datetime import date, timedelta
-
+from sqlmodel import Session, select
 
 STATUS_PRICES = {
     'bronze': 0.0,

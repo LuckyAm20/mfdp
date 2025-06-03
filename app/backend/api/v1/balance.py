@@ -1,15 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
-
-from api.v1.schemas.balance import (
-    TopUpRequest,
-    TopUpResponse,
-    PurchaseStatusRequest,
-    PurchaseStatusResponse,
-    BalanceHistoryResponse,
-    HistoryRequest
-)
-from services.user_manager import UserManager
+from api.v1.schemas.balance import (BalanceHistoryResponse, HistoryRequest,
+                                    PurchaseStatusRequest,
+                                    PurchaseStatusResponse, TopUpRequest,
+                                    TopUpResponse)
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from services.core.security import get_current_user
+from services.user_manager import UserManager
 
 router = APIRouter(
     prefix='/api/v1/balance',

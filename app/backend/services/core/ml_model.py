@@ -1,12 +1,12 @@
+import os
+import threading
+from abc import ABC, abstractmethod
 from typing import Type
 
 import numpy as np
-from abc import ABC, abstractmethod
-
 from joblib import load
 from tensorflow.keras.models import load_model
-import threading
-import os
+
 
 class MLModel(ABC):
     def __init__(self, model, scaler_X, scaler_y):

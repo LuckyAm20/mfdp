@@ -1,6 +1,7 @@
-from typing import Optional
-from sqlmodel import Field, SQLModel
 from datetime import date
+from typing import Optional
+
+from sqlmodel import Field, SQLModel
 
 
 class User(SQLModel, table=True):

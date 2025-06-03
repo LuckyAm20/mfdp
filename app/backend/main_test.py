@@ -1,9 +1,9 @@
 import time
 
-from workers.publisher import publish_prediction_task
-from db.db import init_db, get_session
-
+from db.db import get_session, init_db
 from services.user_manager import UserManager
+from workers.publisher import publish_prediction_task
+
 
 def main():
     init_db()

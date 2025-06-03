@@ -1,15 +1,11 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Body, status
-
-from api.v1.schemas.prediction import (
-    NYCPredictionRequest,
-    PredictionResponse,
-    PredictionHistoryResponse,
-    HistoryRequest
-)
-from services.user_manager import UserManager
+from api.v1.schemas.prediction import (HistoryRequest, NYCPredictionRequest,
+                                       PredictionHistoryResponse,
+                                       PredictionResponse)
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from services.core.security import get_current_user
+from services.user_manager import UserManager
 from workers.publisher import publish_prediction_task
 
 router = APIRouter(
@@ -102,8 +98,7 @@ def get_prediction_history(
     limit = req.amount or 5
 
     all_preds = user_manager.prediction.list_by_user()
-    sorted_preds = sorted(all_preds, key=lambda x: x.timestamp, reverse=True)
-    limited = sorted_preds[:limit]
+    limited = all_preds[:limit]
     return PredictionHistoryResponse(history=limited)
 
 @router.get(

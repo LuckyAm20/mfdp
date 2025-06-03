@@ -1,4 +1,5 @@
 import os
+
 import pika
 
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'rabbitmq')

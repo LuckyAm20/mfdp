@@ -1,13 +1,13 @@
 import threading
+import time
+from datetime import datetime, timedelta, timezone
 
-from fastapi import FastAPI
-from db.db import init_db, get_session
 from api.v1.auth import router as auth_router
 from api.v1.balance import router as balance_router
 from api.v1.prediction import router as prediction_router
+from db.db import get_session, init_db
+from fastapi import FastAPI
 from services.user_manager import UserManager
-from datetime import timezone, datetime, timedelta
-import time
 
 app = FastAPI(
     title='OpenTaxiForecast API',

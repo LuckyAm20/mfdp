@@ -4,17 +4,16 @@ import math
 import os
 import threading
 import time
-
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 
 import numpy as np
-from sklearn.preprocessing import StandardScaler
-from workers.connection import get_rabbitmq_connection
 from db.db import get_session
-from services.user_manager import UserManager
-from services.data_manager import DataManager
 from services.core.enums import TaskStatus
 from services.core.ml_model import ModelRegistry
+from services.data_manager import DataManager
+from services.user_manager import UserManager
+from sklearn.preprocessing import StandardScaler
+from workers.connection import get_rabbitmq_connection
 
 LOGDIR = os.getenv('LOG_DIR', '/logs')
 os.makedirs(LOGDIR, exist_ok=True)

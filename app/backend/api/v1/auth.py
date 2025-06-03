@@ -1,21 +1,13 @@
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
-
-from api.v1.schemas.auth import (
-    RegisterRequest,
-    LoginRequest,
-    TokenResponse,
-    UserStatusResponse,
-)
-from services.user_manager import UserManager
-from services.core.security import (
-    create_access_token,
-    create_bot_token,
-    get_current_user,
-)
+from api.v1.schemas.auth import (LoginRequest, RegisterRequest, TokenResponse,
+                                 UserStatusResponse)
 from db.db import get_session
+from fastapi import APIRouter, Depends, HTTPException, status
+from services.core.security import (create_access_token, create_bot_token,
+                                    get_current_user)
+from services.user_manager import UserManager
+from sqlmodel import Session
 
 router = APIRouter(
     prefix='/api/v1/auth',

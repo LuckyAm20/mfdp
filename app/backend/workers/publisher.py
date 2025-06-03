@@ -1,10 +1,10 @@
-import pika
-
 import json
-from workers.connection import get_rabbitmq_connection, QUEUE_NAME
+from datetime import timedelta
+
+import pika
 from db.db import get_session
 from services.user_manager import UserManager
-from datetime import timedelta
+from workers.connection import QUEUE_NAME, get_rabbitmq_connection
 
 
 def publish_prediction_task(user_id: int, model: str, city: str, cost: float, district: int, hour: int):

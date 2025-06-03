@@ -1,16 +1,14 @@
 import os
 from datetime import datetime, timedelta
-from typing import Optional, Any
+from typing import Any, Optional
 
-from passlib.context import CryptContext
-from jose import JWTError, jwt
-
-from fastapi import Depends, HTTPException, status, Header
-from fastapi.security import OAuth2PasswordBearer
-from sqlmodel import Session
-
-from services.user_manager import UserManager
 from db.db import get_session
+from fastapi import Depends, Header, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from services.user_manager import UserManager
+from sqlmodel import Session
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'my_key')
 ALGORITHM = 'HS256'

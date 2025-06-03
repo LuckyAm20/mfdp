@@ -1,9 +1,11 @@
 from __future__ import annotations
+
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlmodel import Session, select
 from db.models.balance import Balance
-from datetime import datetime, UTC
+from sqlmodel import Session, select
+
 if TYPE_CHECKING:
     from services.user_manager import UserManager
 

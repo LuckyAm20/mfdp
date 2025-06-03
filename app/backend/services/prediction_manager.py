@@ -1,9 +1,11 @@
 from __future__ import annotations
+
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
-from sqlmodel import Session, select
+
 from db.models.prediction import Prediction
 from services.core.enums import TaskStatus
-from datetime import datetime, UTC
+from sqlmodel import Session, select
 
 if TYPE_CHECKING:
     from services.user_manager import UserManager
@@ -70,8 +72,9 @@ class PredictionManager:
 
     def list_by_user(self) -> list[Prediction]:
         stmt = select(Prediction).where(Prediction.user_id == self.ctx.user.id)
-        return self.session.exec(stmt).all()
+        sorted_preds = sorted(self.session.exec(stmt).all(), key=lambda x: x.timestamp, reverse=True)
+        return sorted_preds
 
-    def get_by_id(self, pred_id) -> list[Prediction]:
+    def get_by_id(self, pred_id) -> Prediction:
         stmt = select(Prediction).where((Prediction.user_id == self.ctx.user.id) & (Prediction.id == pred_id))
         return self.session.exec(stmt).first()

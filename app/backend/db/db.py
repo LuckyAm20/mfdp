@@ -1,6 +1,5 @@
-from sqlmodel import Session, SQLModel, create_engine
-
 from db.config import get_settings
+from sqlmodel import Session, SQLModel, create_engine
 
 settings = get_settings()
 
