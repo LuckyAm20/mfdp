@@ -11,3 +11,5 @@ notebooks/y_test.npy
 /data/postgres
 /data/rabbitmq
 logs
+*.pyc
+**/__pycache__/
