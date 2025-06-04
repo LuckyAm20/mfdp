@@ -201,7 +201,23 @@ async def process_balance_cb(callback: types.CallbackQuery, state: FSMContext):
         return
 
     elif action == 'bal_purchase':
-        await callback.message.reply('Введите статус для покупки (silver, gold, diamond):')
+        kb = types.ReplyKeyboardMarkup(
+            keyboard=[
+                [
+                    types.KeyboardButton(text='silver'),
+                    types.KeyboardButton(text='gold'),
+                    types.KeyboardButton(text='diamond'),
+                ]
+            ],
+            resize_keyboard=True,
+            one_time_keyboard=True
+        )
+
+        await callback.message.reply(
+            'Выберите статус для покупки:',
+            reply_markup=kb
+        )
+
         await state.set_state(Form.purchase_status)
         await callback.answer()
         return

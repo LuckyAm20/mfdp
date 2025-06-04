@@ -244,7 +244,7 @@ async def test_balance_purchase_flow(dummy_state):
     user_tokens[60] = 'bot_jwt_token_example'
     callback = DummyCallbackQuery(data='bal_purchase', user_id=60)
     await process_balance_cb(callback, dummy_state)
-    assert any('Введите статус для покупки' in r for r in callback.message.replies)
+    assert any('Выберите статус для покупки:' in r for r in callback.message.replies)
     assert callback.answered is True
 
     msg = DummyMessage('gold', user_id=60)
