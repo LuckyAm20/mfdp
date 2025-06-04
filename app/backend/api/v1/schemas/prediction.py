@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_serializer
 
 
 class PredictionResponse(BaseModel):
@@ -15,22 +15,16 @@ class PredictionResponse(BaseModel):
     result: Optional[str]
     timestamp: datetime
 
-    model_config = ConfigDict(
-        from_attributes=True,
-        json_encoders={
-            datetime: lambda v: v.strftime('%Y-%m-%d %H:%M:%S')
-        }
-    )
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer('timestamp')
+    def format_timestamp(self, dt: datetime) -> str:
+        return dt.strftime('%Y-%m-%d %H:%M:%S')
 
 class PredictionHistoryResponse(BaseModel):
     history: list[PredictionResponse]
 
-    model_config = ConfigDict(
-        from_attributes=True,
-        json_encoders={
-            datetime: lambda v: v.strftime('%Y-%m-%d %H:%M:%S')
-        }
-    )
+    model_config = ConfigDict(from_attributes=True)
 
 
 class NYCPredictionRequest(BaseModel):

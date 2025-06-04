@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from db.db import get_session
@@ -33,7 +33,7 @@ def create_access_token(
 ) -> str:
     to_encode = data.copy()
     to_encode.update({'scope': 'frontend'})
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({'exp': expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -42,7 +42,7 @@ def create_access_token(
 def create_bot_token(data: dict[str, Any]) -> str:
     to_encode = data.copy()
     to_encode.update({'scope': 'bot'})
-    expire = datetime.utcnow() + timedelta(days=365 * 100)
+    expire = datetime.now(timezone.utc) + timedelta(days=365 * 100)
     to_encode.update({'exp': expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

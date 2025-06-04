@@ -1,5 +1,6 @@
 import threading
 import time
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 
 from api.v1.auth import router as auth_router
@@ -9,18 +10,21 @@ from db.db import get_session, init_db
 from fastapi import FastAPI
 from services.user_manager import UserManager
 
-app = FastAPI(
-    title='OpenTaxiForecast API',
-    version='0.1.0',
-)
 
-
-@app.on_event('startup')
-def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     init_db()
 
     thread = threading.Thread(target=daily_status_reset, daemon=True)
     thread.start()
+
+    yield
+
+app = FastAPI(
+    title='OpenTaxiForecast API',
+    version='0.1.0',
+    lifespan=lifespan
+)
 
 def daily_status_reset():
     while True:

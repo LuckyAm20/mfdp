@@ -1,5 +1,4 @@
 import pytest
-from datetime import datetime
 
 NYC_FREE_URL = '/api/v1/prediction/nyc_free'
 NYC_COST_URL = '/api/v1/prediction/nyc_cost'
