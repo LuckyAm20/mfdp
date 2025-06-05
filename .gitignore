@@ -10,6 +10,7 @@ notebooks/y_test.npy
 .env
 /data/postgres
 /data/rabbitmq
+data/lstm_data.csv
 logs
 *.pyc
 **/__pycache__/
