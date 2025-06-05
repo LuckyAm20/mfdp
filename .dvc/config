@@ -1,0 +1,5 @@
+[core]
+    remote = mfdpproject
+['remote "mfdpproject"']
+    url = s3://mfdpproject/models/
+    endpointurl = https://storage.yandexcloud.net

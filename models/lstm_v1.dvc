@@ -1,0 +1,6 @@
+outs:
+- md5: ee3b8252d9ee1f9873664c1d776fe09e.dir
+  size: 3186205
+  nfiles: 3
+  hash: md5
+  path: lstm_v1

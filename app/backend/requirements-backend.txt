@@ -1,0 +1,10 @@
+passlib
+python-jose
+sqlmodel
+pydantic==2.3.0
+pydantic-settings==2.0.3
+psycopg2-binary
+numpy
+fastapi
+uvicorn
+pika
