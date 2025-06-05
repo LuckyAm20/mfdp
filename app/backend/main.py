@@ -9,6 +9,7 @@ from api.v1.prediction import router as prediction_router
 from db.db import get_session, init_db
 from fastapi import FastAPI
 from services.user_manager import UserManager
+from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager
@@ -35,6 +36,14 @@ def daily_status_reset():
 
         with next(get_session()) as session:
             UserManager.reset_expired_statuses(session)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(auth_router)
 app.include_router(balance_router)

@@ -1,5 +1,6 @@
 version: "3.8"
-
+volumes:
+  frontend_dist:
 services:
   backend:
     build:
@@ -72,25 +73,37 @@ services:
       replicas: 2
     restart: on-failure
 
-#  frontend:
-#    build:
-#      context: ./app/frontend
-#      dockerfile: Dockerfile
-#    container_name: frontend
-#    ports:
-#      - "4173:4173"
-#
-#  web-proxy:
-#    image: nginx:latest
-#    container_name: nginx_proxy
-#    volumes:
-#      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-#    ports:
-#      - "80:80"
-#      - "443:443"
-#    depends_on:
-#      - app
-#    restart: always
+  frontend:
+    image: node:20-alpine
+    container_name: frontend_builder
+    working_dir: /usr/src/app
+    volumes:
+      - ./app/frontend:/usr/src/app
+      - frontend_dist:/usr/share/nginx/html
+    env_file:
+      - .env
+    command: >
+      /bin/sh -c "
+        npm ci &&
+        npm run build &&
+        rm -rf /usr/share/nginx/html/* &&
+        cp -r dist/* /usr/share/nginx/html/
+      "
+    restart: "no"
+
+  nginx_proxy:
+      image: nginx:stable-alpine
+      container_name: nginx_proxy
+      ports:
+        - '80:80'
+      volumes:
+        - frontend_dist:/usr/share/nginx/html:ro
+        - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      depends_on:
+        - backend
+        - frontend
+      restart: always
+
   telegram_bot:
     build:
       context: ./app/tg_bot/

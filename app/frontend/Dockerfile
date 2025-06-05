@@ -1,4 +1,11 @@
-FROM ubuntu:latest
-LABEL authors="Misha"
+FROM node:20-alpine AS build
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+CMD ["echo", "✅ frontend build complete"]
