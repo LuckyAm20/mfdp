@@ -28,6 +28,7 @@ services:
       - .env
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
+      - ./airflow/init_db:/docker-entrypoint-initdb.d
     expose:
       - 5432
     restart: unless-stopped
@@ -116,3 +117,85 @@ services:
     restart: on-failure
     depends_on:
       - backend
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  airflow-webserver:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: airflow_web
+    depends_on:
+      - database
+      - mlflow
+    env_file:
+      - .env
+    environment:
+      _AIRFLOW_DB_UPGRADE: 'true'
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
+
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${DB_USER}:${DB_PASS}@database:5432/${DB_NAME}
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      SQL_ALCHEMY_CONN: postgresql+psycopg2://${DB_USER}:${DB_PASS}@database:5432/${DB_NAME}
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./worker_shared:/opt/airflow/worker_shared
+      - ./models:/opt/airflow/models
+      - ./mlruns:/opt/mlflow/mlruns
+      - ./mlflow_artifacts:/opt/mlflow/artifacts
+      - ./logs:/opt/airflow/logs
+    ports:
+      - '8081:8080'
+    entrypoint: >
+      bash -cx "
+        echo '>>> Using DB:' \"${SQL_ALCHEMY_CONN}\" &&
+        airflow db init &&
+        airflow db upgrade &&
+        exec airflow webserver
+      "
+
+  airflow-scheduler:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: airflow_sched
+    depends_on:
+      - airflow-webserver
+    env_file:
+      - .env
+    environment:
+      SQL_ALCHEMY_CONN: postgresql+psycopg2://${DB_USER}:${DB_PASS}@database:5432/${DB_NAME}
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${DB_USER}:${DB_PASS}@database:5432/${DB_NAME}
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./worker_shared:/opt/airflow/worker_shared
+      - ./models:/opt/airflow/models
+      - ./mlruns:/opt/mlflow/mlruns
+      - ./mlflow_artifacts:/opt/mlflow/artifacts
+      - ./logs:/opt/airflow/logs
+    entrypoint: >
+      bash -cx "exec airflow scheduler"
+
+  mlflow:
+    build:
+      context: opt/mlflow
+      dockerfile: Dockerfile
+    container_name: mlflow
+    env_file:
+      - .env
+    volumes:
+      - ./mlruns:/opt/mlflow/mlruns
+      - ./mlflow_artifacts:/opt/mlflow/artifacts
+    ports:
+      - "5000:5000"

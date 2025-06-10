@@ -10,7 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import StatesGroup, State
 from aiogram import Dispatcher
-
+from aiogram.types import FSInputFile
 API_BASE = 'http://backend:8000/api/v1'
 
 user_tokens: Dict[int, str] = {}
@@ -314,6 +314,9 @@ async def prediction_menu(message: types.Message):
                 types.InlineKeyboardButton(text='Получить по ID', callback_data='pred_get'),
                 types.InlineKeyboardButton(text='История', callback_data='pred_history')
             ],
+            [
+                types.InlineKeyboardButton(text='Карты', callback_data='pred_map')
+            ]
         ]
     )
     await message.reply('Выберите действие с предсказаниями:', reply_markup=kb)
@@ -329,7 +332,23 @@ async def process_pred_cb(callback: types.CallbackQuery, state: FSMContext):
         await callback.message.reply('Сначала зарегистрируйтесь или авторизуйтесь.')
         await callback.answer()
         return
+    if action == 'pred_map':
+        base_dir = os.path.dirname(__file__)
+        maps_dir = os.path.join(base_dir, 'maps')
+        if not os.path.isdir(maps_dir):
+            await callback.message.reply('Папка с картами не найдена')
+        else:
+            files = [f for f in os.listdir(maps_dir) if f.lower().endswith(('.jpg', '.jpeg'))]
+            if not files:
+                await callback.message.reply('Карта не найдена')
+            else:
+                for filename in files:
+                    path = os.path.join(maps_dir, filename)
 
+                    photo = FSInputFile(path)
+                    await callback.message.reply_photo(photo)
+        await callback.answer()
+        return
     if action == 'pred_paid':
         await callback.message.reply('Введите номер района для платного предсказания:')
         await state.set_state(Form.pred_paid)

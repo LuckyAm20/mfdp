@@ -14,3 +14,7 @@ data/lstm_data.csv
 logs
 *.pyc
 **/__pycache__/
+worker_shared
+mlflow_artifacts
+mlruns
+models/lstm_v2

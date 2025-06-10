@@ -7,7 +7,7 @@ import Register from './pages/Register'
 import Balance from './pages/Balance'
 import Prediction from './pages/Prediction'
 import Info from './pages/Info'
-
+import Maps from './pages/Maps'
 import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -26,6 +26,7 @@ export default function App() {
                 </div>
               }
             />
+            <Route path="/maps" element={<Maps />} />
 
             <Route path="/login" element={<div className="h-full overflow-hidden"><Login/></div>} />
 

@@ -1,0 +1,10 @@
+meteostat
+boto3
+huggingface_hub
+pandas
+holidays
+joblib
+mlflow
+tensorflow-cpu
+scikit-learn
+botocore

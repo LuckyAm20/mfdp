@@ -16,6 +16,9 @@ export default function Navbar() {
         <Link to="/" className="text-lg font-semibold hover:text-green-200 transition-colors">
           OpenTaxiForecast
         </Link>
+        <Link to="/maps" className="hover:text-green-200 transition-colors">
+          Карты
+        </Link>
         {token && (
           <>
             <Link to="/info" className="hover:text-green-200 transition-colors">
