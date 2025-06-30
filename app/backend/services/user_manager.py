@@ -78,7 +78,7 @@ class UserManager:
         return user
 
     @classmethod
-    def reset_expired_statuses(cls, session: Session):
+    def reset_expired_statuses(cls, session: Session) -> None:
 
         today = date.today()
         stmt = select(User).where(

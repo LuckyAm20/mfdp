@@ -24,7 +24,7 @@ class PredictionManager:
         elif user.status == 'gold':
             self.__check_limit(1000)
 
-    def __check_limit(self, num: int = 10):
+    def __check_limit(self, num: int = 10) -> None:
         today = datetime.now(UTC).date()
         stmt = select(Prediction).where(
             Prediction.user_id == self.ctx.user.id,

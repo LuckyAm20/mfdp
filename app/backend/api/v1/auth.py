@@ -23,7 +23,7 @@ router = APIRouter(
 def register(
     req: RegisterRequest,
     session: Session = Depends(get_session),
-):
+) -> TokenResponse:
     user_manager = UserManager(session)
     user = user_manager.register(req.username, req.password)
 
@@ -50,7 +50,7 @@ def register(
 def login(
     req: LoginRequest,
     session: Session = Depends(get_session),
-):
+) -> TokenResponse:
 
     user_manager = UserManager(session)
     user = user_manager.authenticate(req.username, req.password)
@@ -82,7 +82,7 @@ def login(
 )
 def read_current_user(
     user_manager: UserManager = Depends(get_current_user),
-):
+) -> UserStatusResponse:
     user = user_manager.user
     return UserStatusResponse(
         username=user.username, status=user.status,

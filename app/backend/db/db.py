@@ -1,3 +1,5 @@
+from typing import Generator
+
 from db.config import get_settings
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -11,7 +13,7 @@ engine = create_engine(
 )
 
 
-def get_session():
+def get_session() -> Generator[Session, None, None]:
     db = Session(engine)
     try:
         yield db
@@ -23,5 +25,5 @@ def get_session():
         db.close()
 
 
-def init_db():
+def init_db() -> None:
     SQLModel.metadata.create_all(engine)

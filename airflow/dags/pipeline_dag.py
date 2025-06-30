@@ -1,23 +1,19 @@
 import glob
+import os
+from datetime import datetime, timedelta
 
 import boto3
 import holidays
 import joblib
-import numpy as np
-import os
-import pandas as pd
-from datetime import datetime, timedelta
-
-from airflow.operators.python import PythonOperator
-from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from huggingface_hub import Repository, HfApi, hf_hub_download
-from meteostat import Stations, Hourly
-import tensorflow as tf
 import mlflow
-from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from airflow.operators.python import PythonOperator
+from huggingface_hub import HfApi, hf_hub_download
+from meteostat import Hourly, Stations
 
 from airflow import DAG
-
 
 # Пути внутри контейнера
 SHARED_DIR = '/opt/airflow/worker_shared'
@@ -38,7 +34,7 @@ default_args = {
 }
 
 
-def download_from_s3():
+def download_from_s3() -> None:
     os.makedirs(RAW_DIR, exist_ok=True)
     s3 = boto3.client(
         's3',
@@ -62,7 +58,7 @@ def download_from_s3():
         os.makedirs(os.path.dirname(local_path), exist_ok=True)
         s3.download_file(bucket, key, local_path)
 
-def load_and_clean():
+def load_and_clean() -> str:
     os.makedirs(PROC_DIR, exist_ok=True)
     dfs = []
     for f in glob.glob(f'{RAW_DIR}/*.parquet'):
@@ -92,14 +88,14 @@ def load_and_clean():
     return f'{PROC_DIR}/combined.csv'
 
 
-def aggregate_trips_file(input_path):
+def aggregate_trips_file(input_path: str) -> str:
     df = pd.read_csv(input_path)
     agg = df.groupby(['date', 'hour', 'location_id']).size().reset_index(name='trips_count')
     output_path = os.path.join(PROC_DIR, 'aggregated.csv')
     agg.to_csv(output_path, index=False)
     return output_path
 
-def engineer_features_file(input_path):
+def engineer_features_file(input_path: str) -> str:
     df = pd.read_csv(input_path)
     us_holidays = holidays.US()
     non_working = {'New Year\'s Day', 'MLK Day', 'Washington\'s Birthday', 'Memorial Day',
@@ -130,9 +126,9 @@ def engineer_features_file(input_path):
         .apply(lambda d: (us_holidays.get(d.date()) in non_working) if pd.notnull(d) else False)
         .astype(int)
     )
-    df['lag_1h'] = df.groupby('location_id')['trips_count'].shift(1).bfill()
-    df['lag_24h'] = df.groupby('location_id')['trips_count'].shift(24).bfill()
-    df['lag_168h'] = df.groupby('location_id')['trips_count'].shift(168).bfill()
+    df['lag_1h'] = df.groupby('location_id')['trips_count'].shift(1).fillna(0)
+    df['lag_24h'] = df.groupby('location_id')['trips_count'].shift(24).fillna(0)
+    df['lag_168h'] = df.groupby('location_id')['trips_count'].shift(168).fillna(0)
     df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
     df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
     df['dow_sin'] = np.sin(2 * np.pi * df['day_of_week'] / 7)
@@ -146,7 +142,7 @@ def engineer_features_file(input_path):
     df.to_csv(output_path, index=False)
     return output_path
 
-def merge_weather_file(input_path):
+def merge_weather_file(input_path: str) -> str:
     df = pd.read_csv(input_path)
     df['date'] = pd.to_datetime(df['date']).dt.date
     df['hour'] = df['hour'].astype(int)
@@ -170,19 +166,19 @@ def merge_weather_file(input_path):
     merged.to_csv(output_path, index=False)
     return output_path
 
-def _sorting(df):
+def _sorting(df: pd.DataFrame) -> pd.DataFrame:
     df['datetime'] = pd.to_datetime(df['date'].dt.strftime('%Y-%m-%d') + ' ' + df['hour'].astype(str) + ':00')
     df = df.sort_values(['location_id', 'datetime']).reset_index(drop=True)
     df = df.drop(['datetime'], axis=1)
     return df
 
-def saving(path):
+def saving(path: str) -> str:
     df = pd.read_csv(path, parse_dates=['date'])
     df = _sorting(df)
     df.to_csv(os.path.join(PROC_DIR, 'dataset_new.csv'), index=False)
     return os.path.join(PROC_DIR, 'dataset_new.csv')
 
-def push_to_hf(path):
+def push_to_hf(path: str) -> None:
     token = os.getenv('HUGGINGFACE_TOKEN')
     api = HfApi(token=token)
     existing_path = hf_hub_download(repo_id=REPO_ID, filename='dataset.csv', repo_type='dataset', token=token)
@@ -203,7 +199,11 @@ def push_to_hf(path):
     )
 
 
-def create_sequences(df, past_steps=72, future_steps=24):
+def create_sequences(
+    df: pd.DataFrame,
+    past_steps: int = 72,
+    future_steps: int = 24
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict[int, int]]:
     locs = df['location_id'].unique()
     loc2idx = {loc: idx for idx, loc in enumerate(locs)}
     seqs, tars, regions = [], [], []

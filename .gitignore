@@ -7,10 +7,17 @@ result_lstm_test.csv
 notebooks/result_lstm.csv
 notebooks/y_l.npy
 notebooks/y_test.npy
+notebooks/y_l1.npy
+notebooks/y_test1.npy
+notebooks/result_lstm_test_cost.csv
+notebooks/result_lstm_cost.csv
+notebooks/best_transformer.pth
+notebooks/xgboost.joblib
 .env
 /data/postgres
 /data/rabbitmq
 data/lstm_data.csv
+data
 logs
 *.pyc
 **/__pycache__/

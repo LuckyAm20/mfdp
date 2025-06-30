@@ -3,11 +3,16 @@ from datetime import timedelta
 
 import pika
 from db.db import get_session
+from db.models.prediction import Prediction
 from services.user_manager import UserManager
 from workers.connection import QUEUE_NAME, get_rabbitmq_connection
 
 
-def publish_prediction_task(user_id: int, model: str, city: str, cost: float, district: int, hour: int):
+def publish_prediction_task(
+        user_id: int, model: str,
+        city: str, cost: float,
+        district: int, hour: int
+) -> Prediction:
     with next(get_session()) as session:
         um = UserManager(session, user_id)
         pred = um.prediction.create_prediction(

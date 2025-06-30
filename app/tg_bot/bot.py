@@ -1,16 +1,16 @@
+import ast
 import asyncio
 import os
-from typing import Dict
+from typing import Dict, Optional
 
 import aiohttp
-from aiogram import Bot, types
+from aiogram import Bot, Dispatcher, F, types
 from aiogram.dispatcher.router import Router
-from aiogram import F
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.fsm.state import StatesGroup, State
-from aiogram import Dispatcher
 from aiogram.types import FSInputFile
+
 API_BASE = 'http://backend:8000/api/v1'
 
 user_tokens: Dict[int, str] = {}
@@ -37,7 +37,7 @@ class Form(StatesGroup):
     pred_id = State()
 
 
-async def api_post(path: str, token: str, json_data: dict):
+async def api_post(path: str, token: str, json_data: dict) -> tuple[int, dict]:
     headers = {
         'Authorization': f'Bearer {token}',
         'Content-Type': 'application/json',
@@ -48,7 +48,7 @@ async def api_post(path: str, token: str, json_data: dict):
             return resp.status, await resp.json()
 
 
-async def api_get(path: str, token: str):
+async def api_get(path: str, token: str) -> tuple[int, dict]:
     headers = {
         'Authorization': f'Bearer {token}',
         'X-Bot-Secret': BOT_SECRET,
@@ -73,7 +73,7 @@ def main_menu() -> types.ReplyKeyboardMarkup:
 
 
 @router.message(F.text == '/start')
-async def cmd_start(message: types.Message, state: FSMContext):
+async def cmd_start(message: types.Message, state: FSMContext) -> None:
     await message.reply(
         'Добро пожаловать! Введите логин и пароль через пробел для регистрации.\n\n'
         'Например: user1 password123'
@@ -82,7 +82,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
 
 
 @router.message(Form.auth)
-async def process_auth(message: types.Message, state: FSMContext):
+async def process_auth(message: types.Message, state: FSMContext) -> None:
     parts = message.text.strip().split()
     if len(parts) != 2:
         await message.reply('Нужно ввести ровно два слова: логин и пароль через пробел.')
@@ -108,7 +108,7 @@ async def process_auth(message: types.Message, state: FSMContext):
 
 
 @router.message(F.text == 'ⓘ Инфо')
-async def info_handler(message: types.Message):
+async def info_handler(message: types.Message) -> None:
     tg_id = message.from_user.id
     token = user_tokens.get(tg_id)
     if not token:
@@ -134,13 +134,13 @@ async def info_handler(message: types.Message):
 
 
 @router.message(F.text == '🔑 Авторизация')
-async def login_handler(message: types.Message, state: FSMContext):
+async def login_handler(message: types.Message, state: FSMContext) -> None:
     await message.reply('Введите логин и пароль через пробел для авторизации.')
     await state.set_state(Form.login)
 
 
 @router.message(Form.login)
-async def process_login(message: types.Message, state: FSMContext):
+async def process_login(message: types.Message, state: FSMContext) -> None:
     parts = message.text.strip().split()
     if len(parts) != 2:
         await message.reply('Нужно ввести ровно два слова: логин и пароль через пробел.')
@@ -162,7 +162,7 @@ async def process_login(message: types.Message, state: FSMContext):
 
 
 @router.message(F.text == '💰 Баланс')
-async def balance_menu(message: types.Message):
+async def balance_menu(message: types.Message) -> None:
     tg_id = message.from_user.id
     token = user_tokens.get(tg_id)
     if not token:
@@ -184,7 +184,7 @@ async def balance_menu(message: types.Message):
 
 
 @router.callback_query(F.data.startswith('bal_'))
-async def process_balance_cb(callback: types.CallbackQuery, state: FSMContext):
+async def process_balance_cb(callback: types.CallbackQuery, state: FSMContext) -> None:
     tg_id = callback.from_user.id
     token = user_tokens.get(tg_id)
     action = callback.data
@@ -252,7 +252,7 @@ async def process_balance_cb(callback: types.CallbackQuery, state: FSMContext):
 
 
 @router.message(Form.top_up)
-async def process_top_up(message: types.Message, state: FSMContext):
+async def process_top_up(message: types.Message, state: FSMContext) -> None:
     tg_id = message.from_user.id
     token = user_tokens.get(tg_id)
     try:
@@ -274,7 +274,7 @@ async def process_top_up(message: types.Message, state: FSMContext):
 
 
 @router.message(Form.purchase_status)
-async def process_purchase_status(message: types.Message, state: FSMContext):
+async def process_purchase_status(message: types.Message, state: FSMContext) -> None:
     tg_id = message.from_user.id
     token = user_tokens.get(tg_id)
     status_str = message.text.strip().lower()
@@ -297,7 +297,7 @@ async def process_purchase_status(message: types.Message, state: FSMContext):
 
 
 @router.message(F.text == '🔮 Предсказания')
-async def prediction_menu(message: types.Message):
+async def prediction_menu(message: types.Message) -> None:
     tg_id = message.from_user.id
     token = user_tokens.get(tg_id)
     if not token:
@@ -323,7 +323,7 @@ async def prediction_menu(message: types.Message):
 
 
 @router.callback_query(F.data.startswith('pred_'))
-async def process_pred_cb(callback: types.CallbackQuery, state: FSMContext):
+async def process_pred_cb(callback: types.CallbackQuery, state: FSMContext) -> None:
     tg_id = callback.from_user.id
     token = user_tokens.get(tg_id)
     action = callback.data
@@ -392,7 +392,7 @@ async def process_pred_cb(callback: types.CallbackQuery, state: FSMContext):
 
 
 @router.message(Form.pred_paid)
-async def process_pred_paid(message: types.Message, state: FSMContext):
+async def process_pred_paid(message: types.Message, state: FSMContext) -> None:
     tg_id = message.from_user.id
     token = user_tokens.get(tg_id)
     try:
@@ -415,7 +415,7 @@ async def process_pred_paid(message: types.Message, state: FSMContext):
 
 
 @router.message(Form.pred_free)
-async def process_pred_free(message: types.Message, state: FSMContext):
+async def process_pred_free(message: types.Message, state: FSMContext) -> None:
     tg_id = message.from_user.id
     token = user_tokens.get(tg_id)
     try:
@@ -435,8 +435,27 @@ async def process_pred_free(message: types.Message, state: FSMContext):
     await state.clear()
 
 
+def format_hourly_demand_with_costs(
+        hour_start: int,
+        demand_str: str,
+        costs_str: Optional[str] = None
+) -> str:
+    demand_list = ast.literal_eval(demand_str)
+    costs_list = ast.literal_eval(costs_str) if costs_str is not None else None
+
+    lines = []
+    for i, demand in enumerate(demand_list):
+        hour = (hour_start + i - 8) % 24
+        line = f'🕒 {hour:02d}:00 - 🚗 {demand} поездок'
+        if costs_list is not None:
+            cost = costs_list[i]
+            line += f', 💰 {cost:.2f} $ per mile'
+        lines.append(line)
+    return '\n'.join(lines)
+
+
 @router.message(Form.pred_id)
-async def process_pred_id(message: types.Message, state: FSMContext):
+async def process_pred_id(message: types.Message, state: FSMContext) -> None:
     tg_id = message.from_user.id
     token = user_tokens.get(tg_id)
     try:
@@ -451,15 +470,19 @@ async def process_pred_id(message: types.Message, state: FSMContext):
     elif status_code != 200:
         await message.reply(f'Ошибка: {data.get("detail", data)}', reply_markup=main_menu())
     else:
-        res = data.get('result') or 'Пока нет результата'
+        res_str = data.get('result') or 'Пока нет результата'
+        res = format_hourly_demand_with_costs(data['hour'], res_str, data.get('trip_costs'))
+        word = ''
+        if data['trip_costs'] is not None:
+            word = 'и стоимость '
         await message.reply(
-            f'ID: {data["id"]}\nСтатус: {data["status"]}\nРезультат: {res}',
+            f'ID: {data["id"]}\nСтатус: {data["status"]}\nСпрос {word}по часам:\n{res}',
             reply_markup=main_menu()
         )
     await state.clear()
 
 
-async def main():
+async def main() -> None:
     dp.include_router(router)
     await dp.start_polling(bot, skip_updates=True)
 

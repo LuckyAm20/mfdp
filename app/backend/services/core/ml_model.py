@@ -3,7 +3,9 @@ import threading
 from abc import ABC, abstractmethod
 from typing import Type
 
+import joblib
 import numpy as np
+import pandas as pd
 from joblib import load
 from tensorflow.keras.models import load_model
 
@@ -32,9 +34,22 @@ class LSTM(MLModel):
         y_pred = self.model.predict(batch)
         return np.squeeze(y_pred, axis=0)
 
+class MLP(MLModel):
+    def __init__(self, model_path: str):
+        model = joblib.load(model_path)
+        path = os.path.dirname(model_path)
+        scaler_X = joblib.load(os.path.join(path, 'preprocessor.joblib'))
+        super().__init__(model, scaler_X, None)
+
+    def predict(self, seq: pd.DataFrame) -> float:
+        x_val = self.scaler_X.transform(seq)
+        y_pred = float(self.model.predict(x_val))
+        return round(max(0.0, y_pred), 2)
 
 registry: dict[str, tuple[Type[MLModel], str]] = {
     'lstm': (LSTM, 'lstm_v1'),
+    'lstmv3': (LSTM, 'lstm_v3'),
+    'mlp': (MLP,  'mlp_v1'),
 }
 
 class ModelRegistry:
@@ -59,5 +74,6 @@ class ModelRegistry:
 
     @staticmethod
     def _model_path(name: str, path: str) -> str:
-        ext = '.keras' if name in ('lstm', 'transformer') else '.pth'
+        name = 'lstm' if name.startswith('lstm') else name
+        ext = '.keras' if name in ('lstm', 'transformer') else '.joblib'
         return os.path.join('models', path, f'{name}{ext}')

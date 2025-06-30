@@ -2,18 +2,19 @@ import threading
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
+from typing import AsyncGenerator
 
 from api.v1.auth import router as auth_router
 from api.v1.balance import router as balance_router
 from api.v1.prediction import router as prediction_router
 from db.db import get_session, init_db
 from fastapi import FastAPI
-from services.user_manager import UserManager
 from fastapi.middleware.cors import CORSMiddleware
+from services.user_manager import UserManager
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     init_db()
 
     thread = threading.Thread(target=daily_status_reset, daemon=True)
@@ -27,7 +28,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-def daily_status_reset():
+def daily_status_reset() -> None:
     while True:
         now = datetime.now(timezone.utc)
         tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
