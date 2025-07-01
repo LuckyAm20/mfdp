@@ -20,7 +20,7 @@ router = APIRouter(
 def top_up_balance(
     req: TopUpRequest,
     user_manager: UserManager = Depends(get_current_user),
-):
+) -> TopUpResponse:
     try:
         record = user_manager.balance.deposit(req.amount, description='Пополнение счёта')
     except ValueError as e:
@@ -43,7 +43,7 @@ def top_up_balance(
 def purchase_status(
     req: PurchaseStatusRequest,
     user_manager: UserManager = Depends(get_current_user),
-):
+) -> PurchaseStatusResponse:
     try:
         user = user_manager.purchase_status(req.status)
     except ValueError as e:
@@ -66,7 +66,7 @@ def purchase_status(
 def get_balance_history(
     req: HistoryRequest = Body(HistoryRequest()),
     user_manager: UserManager = Depends(get_current_user),
-):
+) -> BalanceHistoryResponse:
     try:
         limit = req.amount or 5
         history_records = user_manager.balance.get_history(limit=limit)

@@ -13,6 +13,7 @@ class PredictionResponse(BaseModel):
     cost: float
     status: str
     result: Optional[str]
+    trip_costs: Optional[str]
     timestamp: datetime
 
     model_config = ConfigDict(from_attributes=True)

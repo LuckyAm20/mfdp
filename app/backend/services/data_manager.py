@@ -1,13 +1,14 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
+import holidays
 import numpy as np
 import pandas as pd
+from meteostat import Hourly, Stations
 from sklearn.preprocessing import StandardScaler
 
 
 class DataManager:
-    # Класс-переменные для кеша
     _df: Optional[pd.DataFrame] = None
     _loaded_path: Optional[str] = None
 
@@ -92,3 +93,60 @@ class DataManager:
         seq_scaled = scaler_X.transform(X_window)
 
         return seq_scaled
+
+    @staticmethod
+    def create_feature_vector(location_id: int, date: datetime, hour: int, trips: int) -> pd.DataFrame:
+        us_holidays = holidays.US()
+        non_working = {
+            "New Year's Day", 'MLK Day', "Washington's Birthday", 'Memorial Day',
+            'Juneteenth', 'Independence Day', 'Labor Day', 'Thanksgiving', 'Christmas Day'
+        }
+        df = pd.DataFrame({
+            'location_id': [location_id],
+            'date': [pd.to_datetime(date)],
+            'hour': [hour],
+            'trips_count': [trips]
+        })
+
+        df['day_of_week'] = df['date'].dt.dayofweek
+        df['month'] = df['date'].dt.month
+        df['is_weekend'] = (df['day_of_week'] >= 5).astype(int)
+        df['is_holiday'] = df['date'].apply(lambda d: us_holidays.get(d.date()) in non_working)
+        df['is_month_start'] = df['date'].dt.is_month_start.astype(int)
+        df['is_month_end'] = df['date'].dt.is_month_end.astype(int)
+        df['day_of_year'] = df['date'].dt.dayofyear
+        df['week_of_year'] = df['date'].dt.isocalendar().week.astype(int)
+
+        df['is_pre_holiday'] = df['date'].apply(
+            lambda d: us_holidays.get((d + timedelta(days=1)).date()) in non_working)
+        df['is_post_holiday'] = df['date'].apply(
+            lambda d: us_holidays.get((d - timedelta(days=1)).date()) in non_working)
+
+        df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
+        df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
+
+        station = Stations().nearby(40.7128, -74.0060).fetch(1).index[0]
+
+        start_time = pd.Timestamp(year=date.year, month=date.month, day=date.day, hour=hour)
+        end_time = start_time + timedelta(hours=1)
+
+        weather_data = Hourly(station, start_time, end_time).fetch()
+
+        if not weather_data.empty:
+            row = weather_data.iloc[0]
+            df['temp'] = row['temp'] if 'temp' in row and row['temp'] else 0
+            df['prcp'] = row['prcp'] if 'prcp' in row and row['prcp'] else 0
+            df['wspd'] = row['wspd'] if 'wspd' in row and row['wspd'] else 0
+        else:
+            df['temp'] = 0
+            df['prcp'] = 0
+            df['wspd'] = 0
+
+        features = [
+            'location_id', 'trips_count', 'hour', 'temp', 'prcp', 'wspd',
+            'day_of_week', 'month', 'is_weekend', 'is_holiday',
+            'is_month_start', 'is_month_end', 'day_of_year', 'week_of_year',
+            'is_pre_holiday', 'is_post_holiday'
+        ]
+
+        return pd.DataFrame(df, columns=features)

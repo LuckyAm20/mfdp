@@ -12,6 +12,7 @@ class Prediction(SQLModel, table=True):
     hour: int = Field(default=None)
     district: Optional[int] = Field(default=None)
     result: Optional[str] = Field(default=None)
+    trip_costs: Optional[str] = Field(default=None)
     status: str = Field(default='pending')
     cost: float
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

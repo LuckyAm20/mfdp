@@ -15,14 +15,15 @@ router = APIRouter(
 
 
 def create_nyc_prediction(
-    cost: int, district: int,
+    cost: int,
+    district: int,
     user_manager: UserManager,
-):
+) -> PredictionResponse:
     user = user_manager.user
 
     now = datetime.now()
     next_hour = (now.hour + 1) % 24
-    model_name = 'lstm'
+    model_name = 'lstmv3'
     city_name = 'NYC'
 
     try:
@@ -56,7 +57,7 @@ def create_nyc_prediction(
 def create_nyc_prediction_free(
     req: NYCPredictionRequest,
     user_manager: UserManager = Depends(get_current_user),
-):
+) -> PredictionResponse:
     try:
         user_manager.prediction.check_status()
     except PermissionError:
@@ -75,7 +76,7 @@ def create_nyc_prediction_free(
 def create_nyc_prediction_cost(
     req: NYCPredictionRequest,
     user_manager: UserManager = Depends(get_current_user),
-):
+) -> PredictionResponse:
     cost = user_manager.prediction.get_cost()
     try:
         user_manager.prediction.check_balance(cost)
@@ -94,7 +95,7 @@ def create_nyc_prediction_cost(
 def get_prediction_history(
     req: HistoryRequest = Body(HistoryRequest()),
     user_manager: UserManager = Depends(get_current_user),
-):
+) -> PredictionHistoryResponse:
     limit = req.amount or 5
 
     all_preds = user_manager.prediction.list_by_user()
@@ -109,7 +110,7 @@ def get_prediction_history(
 def get_prediction(
     prediction_id: int,
     user_manager: UserManager = Depends(get_current_user),
-):
+) -> PredictionResponse:
     pred = user_manager.prediction.get_by_id(prediction_id)
     if not pred:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Предсказание не найдено')
