@@ -440,6 +440,8 @@ def format_hourly_demand_with_costs(
         demand_str: str,
         costs_str: Optional[str] = None
 ) -> str:
+    if demand_str == 'Пока нет результата':
+        return demand_str
     demand_list = ast.literal_eval(demand_str)
     costs_list = ast.literal_eval(costs_str) if costs_str is not None else None
 
@@ -471,8 +473,8 @@ async def process_pred_id(message: types.Message, state: FSMContext) -> None:
         await message.reply(f'Ошибка: {data.get("detail", data)}', reply_markup=main_menu())
     else:
         res_str = data.get('result') or 'Пока нет результата'
-        res = format_hourly_demand_with_costs(data['hour'], res_str, data.get('trip_costs'))
         word = ''
+        res = format_hourly_demand_with_costs(data['hour'], res_str, data.get('trip_costs'))
         if data['trip_costs'] is not None:
             word = 'и стоимость '
         await message.reply(
